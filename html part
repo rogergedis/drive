@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciar Arquivos 👁️</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Menu Lateral -->
+    <div class="menu-lateral">
+        <div class="menu-opcao">
+            <span>📂</span>
+            <a href="#" id="link-arquivos">Arquivos</a>
+        </div>
+        <div class="menu-opcao">
+            <span>📤</span>
+            <a href="#" id="link-enviar">Enviar Arquivo</a>
+        </div>
+        <div class="menu-opcao">
+            <span>🚪</span>
+            <a href="{{ url_for('logout') }}">Sair</a>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="conteudo">
+        <div class="topbar">
+            <h1>👁️ Olho que Tudo Vê</h1>
+            <a href="{{ url_for('logout') }}">
+                <button class="logout">Sair</button>
+            </a>
+        </div>
+
+        <!-- Mensagem de Sucesso -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div id="mensagem-sucesso" style="color: green; margin: 10px 0;">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Lista de Arquivos -->
+        <div class="arquivo-lista" id="lista-arquivos">
+            {% for arquivo in arquivos %}
+            <div class="arquivo">
+                <span>{{ arquivo }}</span>
+                <a href="{{ url_for('deletar', nome_arquivo=arquivo) }}">
+                    <button class="btn-deletar">🗑️ Deletar</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Upload de Arquivo -->
+        <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" id="form-upload" style="display:none;">
+            <input type="file" name="arquivo" required>
+            <button type="submit">📤 Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        const linkArquivos = document.getElementById('link-arquivos');
+        const linkEnviar = document.getElementById('link-enviar');
+        const listaArquivos = document.getElementById('lista-arquivos');
+        const formUpload = document.getElementById('form-upload');
+
+        // Exibe lista de arquivos e oculta formulário
+        linkArquivos.addEventListener('click', (e) => {
+            e.preventDefault();
+            listaArquivos.style.display = 'block';
+            formUpload.style.display = 'none';
+            limparMensagem();
+        });
+
+        // Exibe formulário e oculta lista
+        linkEnviar.addEventListener('click', (e) => {
+            e.preventDefault();
+            formUpload.style.display = 'block';
+            listaArquivos.style.display = 'none';
+            limparMensagem();
+        });
+
+        function limparMensagem() {
+            const msg = document.getElementById('mensagem-sucesso');
+            if (msg) msg.remove();
+        }
+    </script>
+
+</body>
+</html>
