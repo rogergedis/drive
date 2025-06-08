@@ -1,0 +1,75 @@
+# app.py
+from flask import Flask, render_template, session, redirect, url_for, request
+from werkzeug.utils import secure_filename
+import os
+
+app = Flask(__name__)
+
+app.secret_key = 'segredo_forte'
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+@app.route('/')
+def home():
+    if 'logado' in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        usuario = request.form.get('username')
+        senha = request.form.get('password')
+        if usuario == 'SENHA' and senha == '1234':
+            session['logado'] = True
+            return redirect(url_for('dashboard'))
+        else:
+            return 'Login inválido!'
+    return render_template('login.html')
+
+@app.route('/dashboard')
+def dashboard():
+    if 'logado' not in session:
+        return redirect(url_for('login'))
+    return render_template('dashboard.html')
+
+@app.route('/index')
+def index():
+    if 'logado' not in session:
+        return redirect(url_for('login'))
+    arquivos = os.listdir(UPLOAD_FOLDER)
+    return render_template('index.html', arquivos=arquivos)
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'logado' not in session:
+        return redirect(url_for('login'))
+    if 'arquivo' not in request.files:
+        return redirect(url_for('index'))
+    file = request.files['arquivo']
+    if file.filename == '':
+        return redirect(url_for('index'))
+    nome_seguro = secure_filename(file.filename)
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], nome_seguro))
+    return redirect(url_for('index'))
+
+@app.route('/deletar/<nome_arquivo>')
+def deletar(nome_arquivo):
+    if 'logado' not in session:
+        return redirect(url_for('login'))
+    nome_arquivo = secure_filename(nome_arquivo)
+    caminho = os.path.join(UPLOAD_FOLDER, nome_arquivo)
+    if os.path.exists(caminho):
+        os.remove(caminho)
+    return redirect(url_for('index'))
+
+@app.route('/logout')
+def logout():
+    session.pop('logado', None)
+    return redirect(url_for('login'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
